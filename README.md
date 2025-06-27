@@ -5,7 +5,7 @@ Hello
 
 **Credits**
 
-This repository use code from:
+This repository uses code from:
 
 * Sergey Ovchinnikov's ColabDesign (https://github.com/sokrypton/ColabDesign)
 
