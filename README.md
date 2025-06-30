@@ -3,6 +3,8 @@
 <h3>Fold-conditioned de novo binder design</h3>
 FoldCraft enables fold-conditioning of binder structure, enabling design of binders with diverse folds like TIM-barrels, solenoid folds or Ig-like domains. 
 Using VHH conditioned framework FoldCraft can succesfully design single domain nanobody binders against diverse tergets. The FoldCraft pipeline is described in this preprint
+
+You can easily run FoldCraft on Google Colab using this [link]([**url**](https://colab.research.google.com/drive/1q4DksUdJP0n1aLWF_RnupDSgrdJEhXlX?authuser=1))
 <br>
 <br>
 
