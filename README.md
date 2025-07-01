@@ -12,6 +12,10 @@ You can easily run FoldCraft on Google Colab using this <a href="https://colab.r
 ![Fig1-1](https://github.com/user-attachments/assets/b7612207-be45-410d-aaff-fc2586ea765e)
 
 
+<h1>Running FoldCraft locally</h1>
+
+To run FoldCraft locally you first need to download it
+
 **Credits**
 
 This repository uses code from:
