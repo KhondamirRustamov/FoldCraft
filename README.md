@@ -35,7 +35,7 @@ To run FoldCraft locally you will need the following files:
 --target_hotspots    ->      Residue ranges for target hotspots, e.g., "14-30,80-81,90-102" (required)
 ```
 
-Then you can run FoldCraft with following comand:
+Then you should activate you conda/mamba ebvionment with `conda activate FoldCraft` and run FoldCraft with following comand:
 ```
 python FoldCraft.py \
       --output_folder design_1qys_pd_l1 \
