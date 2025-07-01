@@ -38,9 +38,26 @@ To run FoldCraft locally you will need the following files:
 Then you can run FoldCraft with following comand:
 ```
 python FoldCraft.py \
-      --output_folder design_1qys_pd_l1\
-      --binder_template 1qys.pdb\
-      --target_template pd_l1.pdb
+      --output_folder design_1qys_pd_l1 \
+      --binder_template 1qys.pdb \
+      --target_template pd_l1.pdb \
+      --target_hotspots '36-41,84-88,92-96' \
+      --binder_hotspots '25-40,50-65' \
+      --num_designs 40
+```
+
+You can also specify the ProteinMPNN optimization strategy, and ProteinMPNN weights to use, as well as other settings:
+```
+--sample             ->      Whether to generate designs until the target number of successful designs is reached
+--target_success     ->      Target number of successful designs to generate (used only if --sample is enabled)
+--num_designs        ->      Number of design trajectories to generate (ignored if --sample is enabled)
+--binder_hotspots    ->      Residue ranges for binder, e.g. "14-30,80-81,90-102"
+--binder_mask        ->      Residue ranges in the binder to mask (ignored during loss computation), e.g. "14-30"
+--binder_chain       ->      Binder template chain (default = A)
+--target_chain       ->      Target template chain (default = A)
+--mpnn_weight        ->      PoteinMPNN weights to use ('soluble', 'original')
+--redesign_method    ->      ProteinMPNN redesign strategy: 'full' or 'non-interface' (default: 'non-interface')
+--mpnn_samples       ->      Number of sequences to sample with ProteinMPNN (default: 5)
 ```
 
 **Credits**
