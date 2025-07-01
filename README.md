@@ -4,7 +4,7 @@
 FoldCraft enables fold-conditioning of binder structure, enabling design of binders with diverse folds like TIM-barrels, solenoid folds or Ig-like domains. 
 Using VHH conditioned framework FoldCraft can succesfully design single domain nanobody binders against diverse tergets. The FoldCraft pipeline is described in this preprint
 
-You can easily run FoldCraft on Google Colab using this <a href="https://colab.research.google.com/github/KhondamirRustamov/FoldCraft/blob/main/FoldCraft.ipynb">link</a>
+You can easily run FoldCraft on Google Colab using this <a href="https://colab.research.google.com/github/KhondamirRustamov/FoldCraft/blob/main/FoldCraft.ipynb">link</a>. Or use this <a href='https://colab.research.google.com/github/KhondamirRustamov/FoldCraft/blob/main/FoldCraft_VHH.ipynb'>notebook</a>, if you want to design VHH fold binders specifically
 <br>
 <br>
 
