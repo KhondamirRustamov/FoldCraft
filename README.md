@@ -26,7 +26,22 @@ NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmark
 
 <h2>Running FoldCraft locally</h2>
 
-To run FoldCraft locally you first need to download it
+To run FoldCraft locally you will need the following files:
+
+```
+--output_folder -> Folder to save the results
+--binder_template -> Path to the binder template PDB file (required)
+--target_template -> Path to the target template PDB file (required)
+--target_hotspots -> Residue ranges for target hotspots, e.g., "14-30,80-81,90-102" (required)
+```
+
+Then you can run FoldCraft with following comand:
+```
+python FoldCraft.py \
+      --output_folder design_1qys_pd_l1\
+      --binder_template 1qys.pdb\
+      --target_template pd_l1.pdb
+```
 
 **Credits**
 
