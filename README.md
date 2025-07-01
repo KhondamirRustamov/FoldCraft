@@ -35,3 +35,5 @@ This repository uses code from:
 * Sergey Ovchinnikov's ColabDesign (https://github.com/sokrypton/ColabDesign)
 
 * Justas Dauparas's ProteinMPNN (https://github.com/dauparas/ProteinMPNN)
+
+*   Martin Pacesa's BindCraft (https://github.com/martinpacesa/BindCraft)
