@@ -12,7 +12,19 @@ You can easily run FoldCraft on Google Colab using this <a href="https://colab.r
 ![Fig1-1](https://github.com/user-attachments/assets/b7612207-be45-410d-aaff-fc2586ea765e)
 
 
-<h1>Running FoldCraft locally</h1>
+<h2>Installation</h2>
+
+First you need to install FoldCraft repository on your local machine:
+
+`git clone https://github.com/KhondamirRustamov/FoldCraft`
+
+Then run code below to download all requirements, ColabDesign and AlphaFold weights
+
+`bash install_bindcraft.sh --cuda '12.4' --pkg_manager 'conda'`
+
+NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmarking, should be installed separately as described in official repository: 
+
+<h2>Running FoldCraft locally</h2>
 
 To run FoldCraft locally you first need to download it
 
