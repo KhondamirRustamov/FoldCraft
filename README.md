@@ -29,10 +29,10 @@ NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmark
 To run FoldCraft locally you will need the following files:
 
 ```
---output_folder -> Folder to save the results
---binder_template -> Path to the binder template PDB file (required)
---target_template -> Path to the target template PDB file (required)
---target_hotspots -> Residue ranges for target hotspots, e.g., "14-30,80-81,90-102" (required)
+--output_folder      ->      Folder to save the results
+--binder_template    ->      Path to the binder template PDB file (required)
+--target_template    ->      Path to the target template PDB file (required)
+--target_hotspots    ->      Residue ranges for target hotspots, e.g., "14-30,80-81,90-102" (required)
 ```
 
 Then you can run FoldCraft with following comand:
@@ -60,7 +60,7 @@ You can also specify the ProteinMPNN optimization strategy, and ProteinMPNN weig
 --mpnn_samples       ->      Number of sequences to sample with ProteinMPNN (default: 5)
 ```
 
-**Credits**
+<h2>Credits</h2>
 
 This repository uses code from:
 
