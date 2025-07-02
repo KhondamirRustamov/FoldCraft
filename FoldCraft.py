@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument('--sample', action='store_true', help='Whether to generate designs until the target number of successful designs is reached')
     parser.add_argument('--target_success', type=int, default=100, help='Target number of successful designs to generate (used only if --sample is enabled)')
     parser.add_argument('--num_designs', type=int, default=1, help='Number of design trajectories to generate (ignored if --sample is enabled)')
+    parser.add_argument('--vhh', action='store_true', help='Whether to use VHH framework to construct target cmap (all binder information would be ignored in that case)')
     
     parser.add_argument('--binder_template', type=str, required=True, help='Path to the binder template PDB file (required)')
     parser.add_argument('--target_template', type=str, required=True, help='Path to the target template PDB file (required)')
@@ -66,6 +67,7 @@ def main():
     template_pdb = args.binder_template #template for binder
     binder_template = template_pdb.split('/')[-1].split('.')[0]
     chain_template = args.binder_chain #chain for binder
+    vhh = args.vhh
 
     pdb_target_path = args.target_template #template for target
     chain_id = args.target_chain #Select chain for target protein.
@@ -97,73 +99,85 @@ def main():
         os.system(f'mkdir {folder_name}')
     except:
         pass
-    
-    pdbparser = PDBParser()
-    
-    structure = pdbparser.get_structure(binder_template, template_pdb)
-    chains = {chain.id:seq1(''.join(residue.resname for residue in chain)) for chain in structure.get_chains()}
-    
-    query_chain = chains[chain_template]
-    
-    af_binder = mk_afdesign_model(protocol="fixbb", use_templates=True)
-    af_binder.prep_inputs(pdb_filename=template_pdb,
-                         ignore_missing=False,
-                         chain = chain_template,
-                         rm_template_seq=False,
-                         rm_template_sc=False,)
-    
-    #name='9had'
-    af_binder.set_seq(query_chain[:af_binder._len])
-    af_binder.predict(num_recycles=3, verbose=False)
-    print(f"CMAP of {binder_template} (monomer plddt: {af_binder.aux['log']['plddt']:.3f})")
-    #plt.imshow(af_model.aux['cmap'])
-    
-    
-    warnings.filterwarnings("ignore")
-    
-    #Prepare target protein structure
-    
-    def set_range(hotspots_input):
-        new_h = [x for x in hotspots_input.split(',')]
-        h_range = []
-        for i in new_h:
-            if '-' in i:
-                h_range += [x for x in range(int(i.split('-')[0]), int(i.split('-')[1]))]
-            else:
-                h_range.append(int(i))
-        return h_range
-    
-    target_hotspots_np = np.array(set_range(target_hotspots))
-    
-    af_model = mk_afdesign_model(protocol="fixbb", use_templates=True)
-    af_model.prep_inputs(pdb_filename=pdb_target_path,
-                         ignore_missing=False,
-                         chain = chain_id,)
-    
-    target_len = af_model._len
-    binder_len = af_binder._len
-    
-    load_np = af_binder.aux['cmap']
-    
-    if binder_mask != '':
-        binder_mask = set_range(binder_mask)
-        for i in binder_mask:
-            load_np[i,:] = 0.
-            load_np[:,i] = 0.
-    
-    fc_cmap = np.zeros((target_len+binder_len, target_len+binder_len))
-    
-    if binder_hotspots == '':
-        cdr_range = np.array([range(0,binder_len)])+target_len
-    else:
+        
+    if vhh:
+        load_np = np.load(f'framework/vhh.npy')
+        target_hotspots_np = np.array(set_range(target_hotspots))
+        af_model = mk_afdesign_model(protocol="fixbb", use_templates=True)
+        af_model.prep_inputs(pdb_filename=pdb_target_path,
+                             ignore_missing=False,
+                             chain = chain_id,)
+        
+        target_len = af_model._len
+        binder_len = 127
+        fc_cmap = np.zeros((target_len+binder_len, target_len+binder_len))
+        
+        binder_hotspots = '26-35,55-59,102-116'
         cdr_range = np.array(set_range(binder_hotspots))+target_len
-    
-    fc_cmap[-binder_len:,-binder_len:] = load_np
-    
-    for i in target_hotspots_np:
-        for x in cdr_range:
-            fc_cmap[x-1,i-1] = 1.
-            fc_cmap[i-1,x-1] = 1.
+        
+        fc_cmap[-binder_len:,-binder_len:] = load_np
+        
+        for i in target_hotspots_np:
+            for x in cdr_range:
+                fc_cmap[x-1,i-1] = 1.
+                fc_cmap[i-1,x-1] = 1.
+    else:
+        pdbparser = PDBParser()
+        
+        structure = pdbparser.get_structure(binder_template, template_pdb)
+        chains = {chain.id:seq1(''.join(residue.resname for residue in chain)) for chain in structure.get_chains()}
+        
+        query_chain = chains[chain_template]
+        
+        af_binder = mk_afdesign_model(protocol="fixbb", use_templates=True)
+        af_binder.prep_inputs(pdb_filename=template_pdb,
+                             ignore_missing=False,
+                             chain = chain_template,
+                             rm_template_seq=False,
+                             rm_template_sc=False,)
+        
+        #name='9had'
+        af_binder.set_seq(query_chain[:af_binder._len])
+        af_binder.predict(num_recycles=3, verbose=False)
+        print(f"CMAP of {binder_template} (monomer plddt: {af_binder.aux['log']['plddt']:.3f})")
+        #plt.imshow(af_model.aux['cmap'])
+        
+        
+        warnings.filterwarnings("ignore")
+        
+        #Prepare target protein structure
+        
+        target_hotspots_np = np.array(set_range(target_hotspots))
+        
+        af_model = mk_afdesign_model(protocol="fixbb", use_templates=True)
+        af_model.prep_inputs(pdb_filename=pdb_target_path,
+                             ignore_missing=False,
+                             chain = chain_id,)
+        
+        target_len = af_model._len
+        binder_len = af_binder._len
+        
+        load_np = af_binder.aux['cmap']
+        
+        if binder_mask != '':
+            binder_mask = set_range(binder_mask)
+            for i in binder_mask:
+                load_np[i,:] = 0.
+                load_np[:,i] = 0.
+        
+        fc_cmap = np.zeros((target_len+binder_len, target_len+binder_len))
+        
+        if binder_hotspots == '':
+            cdr_range = np.array([range(0,binder_len)])+target_len
+        else:
+            cdr_range = np.array(set_range(binder_hotspots))+target_len
+        
+        fc_cmap[-binder_len:,-binder_len:] = load_np
+        
+        for i in target_hotspots_np:
+            for x in cdr_range:
+                fc_cmap[x-1,i-1] = 1.
+                fc_cmap[i-1,x-1] = 1.
     
     from matplotlib import patches
     fig, ax = plt.subplots()
@@ -311,7 +325,7 @@ def main():
         passed = 0
         success_target = 100
         i=0
-        while passed < success_target:
+        while passed <= success_target:
             clear_mem()
             i+=1
             name = f'traj_{i}' #@param {type:"string"}
