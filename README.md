@@ -45,6 +45,15 @@ python FoldCraft.py \
       --binder_hotspots '25-40,50-65' \
       --num_designs 40
 ```
+Or run this code if you want to design nanobody fold-conditioned binders using VHH framework. In that case you don't need to specify the binder template pdb
+```
+python FoldCraft.py \
+      --output_folder design_1qys_pd_l1 \
+      --target_template pd_l1.pdb \
+      --target_hotspots '36-41,84-88,92-96' \
+      --vhh
+      --num_designs 40
+```
 
 You can also specify the ProteinMPNN optimization strategy, and ProteinMPNN weights to use, as well as other settings:
 ```
