@@ -22,7 +22,7 @@ Then run code below to download all requirements, ColabDesign and AlphaFold weig
 
 `bash install_foldcraft.sh --cuda '12.4' --pkg_manager 'conda'`
 
-NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmarking, should be installed separately as described in official repository: 
+NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmarking, should be installed separately as described in official repository (https://github.com/google-deepmind/alphafold3)
 
 <h2>Running FoldCraft locally</h2>
 
