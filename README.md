@@ -49,7 +49,7 @@ Or run this code if you want to design nanobody fold-conditioned binders using V
 ```
 python FoldCraft.py \
       --vhh 
-      --output_folder design_1qys_pd_l1 \
+      --output_folder design_vhh_pd_l1 \
       --target_template framework/test/pd_l1.pdb \
       --target_hotspots '36-41,84-88,92-96' \
       --num_designs 40
