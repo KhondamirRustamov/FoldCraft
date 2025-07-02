@@ -48,14 +48,14 @@ python FoldCraft.py \
 
 You can also specify the ProteinMPNN optimization strategy, and ProteinMPNN weights to use, as well as other settings:
 ```
---sample             ->      Whether to generate designs until the target number of successful designs is reached
---target_success     ->      Target number of successful designs to generate (used only if --sample is enabled)
---num_designs        ->      Number of design trajectories to generate (ignored if --sample is enabled)
+--sample             ->      Whether to generate designs until the target number of successful designs is reached (default: False)
+--target_success     ->      Target number of successful designs to generate - used only if --sample is enabled (default: 100)
+--num_designs        ->      Number of design trajectories to generate - ignored if --sample is enabled (default: 1)
 --binder_hotspots    ->      Residue ranges for binder, e.g. "14-30,80-81,90-102"
 --binder_mask        ->      Residue ranges in the binder to mask (ignored during loss computation), e.g. "14-30"
---binder_chain       ->      Binder template chain (default = A)
---target_chain       ->      Target template chain (default = A)
---mpnn_weight        ->      PoteinMPNN weights to use ('soluble', 'original')
+--binder_chain       ->      Binder template chain (default: 'A')
+--target_chain       ->      Target template chain (default: 'A')
+--mpnn_weight        ->      PoteinMPNN weights to use: 'soluble', 'original' (default: 'soluble')
 --redesign_method    ->      ProteinMPNN redesign strategy: 'full' or 'non-interface' (default: 'non-interface')
 --mpnn_samples       ->      Number of sequences to sample with ProteinMPNN (default: 5)
 ```
