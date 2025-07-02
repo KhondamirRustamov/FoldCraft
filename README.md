@@ -20,7 +20,7 @@ First you need to install FoldCraft repository on your local machine:
 
 Then run code below to download all requirements, ColabDesign and AlphaFold weights
 
-`bash install_bindcraft.sh --cuda '12.4' --pkg_manager 'conda'`
+`bash install_foldcraft.sh --cuda '12.4' --pkg_manager 'conda'`
 
 NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmarking, should be installed separately as described in official repository: 
 
