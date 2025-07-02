@@ -9,6 +9,16 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.PDB.Selection import unfold_entities
 from Bio.PDB.Polypeptide import is_aa
 
+def set_range(hotspots_input):
+    new_h = [x for x in hotspots_input.split(',')]
+    h_range = []
+    for i in new_h:
+        if '-' in i:
+            h_range += [x for x in range(int(i.split('-')[0]), int(i.split('-')[1]))]
+        else:
+            h_range.append(int(i))
+    return h_range
+
 # analyze sequence composition of design
 def validate_design_sequence(sequence, num_clashes, advanced_settings):
     note_array = []

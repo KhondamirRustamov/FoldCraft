@@ -188,7 +188,6 @@ def main():
     ax.add_patch(rect2)
     plt.savefig(f'{folder_name}/fold_cond_cmap.png')
     
-    os.system(f'mkdir {folder_name}')
     np.save(f'{folder_name}/fold_cond_cmap.npy',fc_cmap)
     
     fc_cmap[fc_cmap>0] = 1
@@ -323,7 +322,7 @@ def main():
     
     else:
         passed = 0
-        success_target = 100
+        #success_target = success_target
         i=0
         while passed <= success_target:
             clear_mem()
