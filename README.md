@@ -48,6 +48,7 @@ python FoldCraft.py \
 
 You can also specify the ProteinMPNN optimization strategy, and ProteinMPNN weights to use, as well as other settings:
 ```
+--vhh                 ->      Whether to use VHH framework to construct target cmap (all binder information would be ignored in that case)
 --sample              ->      Whether to generate designs until the target number of successful designs is reached (default: False)
 --target_success      ->      Target number of successful designs to generate - used only if --sample is enabled (default: 100)
 --num_designs         ->      Number of design trajectories to generate - ignored if --sample is enabled (default: 1)
