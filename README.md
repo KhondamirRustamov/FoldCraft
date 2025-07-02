@@ -39,8 +39,8 @@ Then you should activate you conda/mamba ebvionment with `conda activate FoldCra
 ```
 python FoldCraft.py \
       --output_folder design_1qys_pd_l1 \
-      --binder_template 1qys.pdb \
-      --target_template pd_l1.pdb \
+      --binder_template framework/test/1qys.pdb \
+      --target_template framework/test/pd_l1.pdb \
       --target_hotspots '36-41,84-88,92-96' \
       --binder_hotspots '25-40,50-65' \
       --num_designs 40
@@ -50,7 +50,7 @@ Or run this code if you want to design nanobody fold-conditioned binders using V
 python FoldCraft.py \
       --vhh 
       --output_folder design_1qys_pd_l1 \
-      --target_template pd_l1.pdb \
+      --target_template framework/test/pd_l1.pdb \
       --target_hotspots '36-41,84-88,92-96' \
       --num_designs 40
 ```
