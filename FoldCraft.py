@@ -350,7 +350,6 @@ def main():
             af_model.save_pdb(f"{folder_name}/traj/{name}.pdb", get_best=False)
             with open(f'{folder_name}/traj/{name}.pickle', 'wb') as handle:
                 pickle.dump(af_model.aux['all'], handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
             if af_model.aux['log']['i_pae']<0.4 and af_model.aux['log']['plddt']>.7:
                 #Running ProteinMPNN on designed trajectory
                 design_pos = range(1,binder_len) # positions to design
