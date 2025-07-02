@@ -18,7 +18,7 @@ First you need to install FoldCraft repository on your local machine:
 
 `git clone https://github.com/KhondamirRustamov/FoldCraft`
 
-Then run code below to download all requirements, ColabDesign and AlphaFold weights
+Then run code below to download all requirements, ColabDesign and AlphaFold2 weights
 
 `bash install_foldcraft.sh --cuda '12.4' --pkg_manager 'conda'`
 
