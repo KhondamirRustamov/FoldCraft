@@ -29,10 +29,10 @@ NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmark
 To run FoldCraft locally you will need the following files:
 
 ```
---output_folder      ->      Folder to save the results
---binder_template    ->      Path to the binder template PDB file (required)
---target_template    ->      Path to the target template PDB file (required)
---target_hotspots    ->      Residue ranges for target hotspots, e.g., "14-30,80-81,90-102" (required)
+--output_folder       ->      Folder to save the results
+--binder_template     ->      Path to the binder template PDB file (required)
+--target_template     ->      Path to the target template PDB file (required)
+--target_hotspots     ->      Residue ranges for target hotspots, e.g., "14-30,80-81,90-102" (required)
 ```
 
 Then you should activate you conda/mamba ebvionment with `conda activate FoldCraft` and run FoldCraft with following comand:
@@ -48,16 +48,20 @@ python FoldCraft.py \
 
 You can also specify the ProteinMPNN optimization strategy, and ProteinMPNN weights to use, as well as other settings:
 ```
---sample             ->      Whether to generate designs until the target number of successful designs is reached (default: False)
---target_success     ->      Target number of successful designs to generate - used only if --sample is enabled (default: 100)
---num_designs        ->      Number of design trajectories to generate - ignored if --sample is enabled (default: 1)
---binder_hotspots    ->      Residue ranges for binder, e.g. "14-30,80-81,90-102"
---binder_mask        ->      Residue ranges in the binder to mask (ignored during loss computation), e.g. "14-30"
---binder_chain       ->      Binder template chain (default: 'A')
---target_chain       ->      Target template chain (default: 'A')
---mpnn_weight        ->      PoteinMPNN weights to use: 'soluble', 'original' (default: 'soluble')
---redesign_method    ->      ProteinMPNN redesign strategy: 'full' or 'non-interface' (default: 'non-interface')
---mpnn_samples       ->      Number of sequences to sample with ProteinMPNN (default: 5)
+--sample              ->      Whether to generate designs until the target number of successful designs is reached (default: False)
+--target_success      ->      Target number of successful designs to generate - used only if --sample is enabled (default: 100)
+--num_designs         ->      Number of design trajectories to generate - ignored if --sample is enabled (default: 1)
+--binder_hotspots     ->      Residue ranges for binder, e.g. "14-30,80-81,90-102"
+--binder_mask         ->      Residue ranges in the binder to mask (ignored during loss computation), e.g. "14-30"
+--binder_chain        ->      Binder template chain (default: 'A')
+--target_chain        ->      Target template chain (default: 'A')
+--design_stages       ->      Number of each design stages in 3stage_design (default: 100,100,20)
+--mpnn_weight         ->      PoteinMPNN weights to use: 'soluble', 'original' (default: 'soluble')
+--redesign_method     ->      ProteinMPNN redesign strategy: 'full' or 'non-interface' (default: 'non-interface')
+--mpnn_samples        ->      Number of sequences to sample with ProteinMPNN (default: 5)
+--mpnn_backbone_noise ->      Backbone noise during sampling (default: 0.0)
+--mpnn_sampling_temp  ->      Sampling temperature for amino acids 0.0-1.0 (default: 0.1)
+--mpnn_save           ->      Whether to save MPNN sampled sequences
 ```
 
 <h2>Credits</h2>
