@@ -51,11 +51,11 @@ def parse_args():
 
     parser.add_argument('--design_stages', type=str, default='100,100,20', help="Number of each design stages in 3stage_design (default: 100,100,20)")
     
-    parser.add_argument('--mpnn_weight', type=str, choices=['soluble', 'stable'], default='soluble', help="PoteinMPNN weights to use ('soluble', 'original')")
+    parser.add_argument('--mpnn_weight', type=str, choices=['soluble', 'original'], default='soluble', help="PoteinMPNN weights to use ('soluble', 'original')")
     parser.add_argument('--redesign_method', type=str, choices=['full', 'non-interface'], default='non-interface', help="ProteinMPNN redesign strategy: 'full' or 'non-interface' (default: 'non-interface')") 
     parser.add_argument('--mpnn_samples', type=int, default=5, help="Number of sequences to sample with ProteinMPNN (default: 5)")
-    parser.add_argument('--mpnn_backbone_noise', type=int, default=0.0, help="Backbone noise during sampling (default: 0.0)")
-    parser.add_argument('--mpnn_sampling_temp', type=int, default=0.1, help="Sampling temperature for amino acids 0.0-1.0 (default: 0.1)")
+    parser.add_argument('--mpnn_backbone_noise', type=float, default=0.0, help="Backbone noise during sampling (default: 0.0)")
+    parser.add_argument('--mpnn_sampling_temp', type=float, default=0.1, help="Sampling temperature for amino acids 0.0-1.0 (default: 0.1)")
     parser.add_argument('--mpnn_save', action='store_true', help='Whether to save MPNN sampled sequences')
       
     return parser.parse_args()
