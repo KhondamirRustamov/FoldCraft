@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test / tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Design pipeline outputs (trajectories, mpnn samples, results)
+# These are large and run-specific; keep them out of version control.
+**/traj/
+**/mpnn/
+**/designs/
+**/relaxed/
+*.pickle
+results*.csv
+fold_cond_cmap*.npy
+
+# OS noise
+.DS_Store
