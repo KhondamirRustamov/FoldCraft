@@ -30,8 +30,17 @@ from colabdesign.mpnn import mk_mpnn_model
 from biopython_utils import *
 import warnings
 
-from BindCraft.functions import *
-pr.init(f'-ignore_unrecognized_res -ignore_zero_occupancy -mute all -holes:dalphaball "./DAlphaBall.gcc" -corrections::beta_nov16 true -relax:default_repeats 1')
+# BindCraft provides the PyRosetta relax + interface-scoring helpers reused
+# below. It is not pip-installable, so locate the checkout (created by
+# install_foldcraft.sh or pointed to via $BINDCRAFT_PATH), put it on sys.path,
+# and import only what we use -- avoiding the previous `import *`, which both
+# failed when BindCraft was absent and shadowed FoldCraft's own biopython_utils.
+from bindcraft_deps import ensure_bindcraft_importable, dalphaball_path
+ensure_bindcraft_importable()
+import pyrosetta as pr
+from BindCraft.functions.pyrosetta_utils import pr_relax, score_interface
+
+pr.init(f'-ignore_unrecognized_res -ignore_zero_occupancy -mute all -holes:dalphaball "{dalphaball_path()}" -corrections::beta_nov16 true -relax:default_repeats 1')
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run fold-conditioned binder design")

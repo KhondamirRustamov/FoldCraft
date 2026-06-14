@@ -27,6 +27,8 @@ Then run code below to download all requirements, ColabDesign and AlphaFold2 wei
 
 NOTE: AlphaFold3, which has been used in the manuscript for VHH design benchmarking, should be installed separately as described in official <a href='https://github.com/google-deepmind/alphafold3'>repository</a>
 
+NOTE: The PyRosetta-based binder pipeline (`FoldCraft_binder.py`) reuses interface relaxation and scoring from <a href='https://github.com/martinpacesa/BindCraft'>BindCraft</a> (the `pr_relax` and `score_interface` functions, plus the bundled `DAlphaBall.gcc`). `install_foldcraft.sh` now clones BindCraft into the FoldCraft directory automatically. If you install manually, clone BindCraft alongside FoldCraft (or set the `BINDCRAFT_PATH` environment variable to its location). Set `BINDCRAFT_COMMIT` before running the installer to pin a specific BindCraft revision for reproducibility.
+
 <h2>Running FoldCraft locally</h2>
 
 To run FoldCraft locally you will need the following files:
