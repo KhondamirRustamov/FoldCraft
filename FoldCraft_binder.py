@@ -103,10 +103,7 @@ def main():
     model_name = 'v_48_010'
 
     if start_with==0:
-    	try:
-    	    os.system(f'mkdir {folder_name}')
-    	except:
-            pass  
+    	os.makedirs(folder_name, exist_ok=True)
     
     # Start to design
 
@@ -127,10 +124,10 @@ def main():
 
     # Create folders to save outputs
     if start_with == 0:
-    	os.system(f'mkdir {folder_name}/traj/')
-    	os.system(f'mkdir {folder_name}/mpnn/')
-    	os.system(f'mkdir {folder_name}/designs/')
-    	os.system(f'mkdir {folder_name}/relaxed/')
+    	os.makedirs(f'{folder_name}/traj/', exist_ok=True)
+    	os.makedirs(f'{folder_name}/mpnn/', exist_ok=True)
+    	os.makedirs(f'{folder_name}/designs/', exist_ok=True)
+    	os.makedirs(f'{folder_name}/relaxed/', exist_ok=True)
 
     # Generate N number of trajectories
     
@@ -259,8 +256,8 @@ def main():
                             df.to_csv(f"{folder_name}/results_pyrosetta.csv")
                             passed+=1
                         else:
-                            
-                            os.system(f'rm {mpnn_design_relaxed}')
+
+                            os.remove(mpnn_design_relaxed)
                         
                         
     
