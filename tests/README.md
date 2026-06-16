@@ -17,6 +17,8 @@ Covered today (all CPU-only, run on a laptop in seconds):
 - `biopython_utils.calculate_clash_score` — clash counting (real PDB fixtures)
 - `biopython_utils.hotspot_residues` — interface detection (synthetic complex)
 - `biopython_utils.target_pdb_rmsd` — CA RMSD after superposition
+- `cmap_utils` — fold-conditioned cmap assembly + binder_mask (differential test
+  against an independent re-implementation, plus adversarial mask inputs)
 
 ## Fixed behaviors the tests lock
 
