@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# AlphaFold2 weights (downloaded by install_foldcraft.sh)
+params/
+
+# Design outputs
+examples/outputs/
+**/traj/
+**/mpnn/
+**/designs/
+results.csv
+fold_cond_cmap.npy
+fold_cond_cmap_mask.npy
+fold_cond_cmap.png
+
+# OS / editor
+.DS_Store
+*.swp

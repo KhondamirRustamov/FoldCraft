@@ -1,0 +1,10 @@
+# Shell scripts and Python must use LF — they run on Linux
+*.sh  text eol=lf
+*.py  text eol=lf
+*.md  text eol=lf
+*.pdb text eol=lf
+
+# Binary data — never apply line-ending conversion
+*.npy binary
+*.png binary
+*.pdf binary

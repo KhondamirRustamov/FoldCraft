@@ -40,7 +40,7 @@ def parse_args():
     parser.add_argument('--num_designs', type=int, default=1, help='Number of design trajectories to generate (ignored if --sample is enabled)')
     parser.add_argument('--vhh', action='store_true', help='Whether to use VHH framework to construct target cmap (all binder information would be ignored in that case)')
     
-    parser.add_argument('--binder_template', type=str, required=True, help='Path to the binder template PDB file (required)')
+    parser.add_argument('--binder_template', type=str, default='', help='Path to the binder template PDB file (required unless --vhh is set)')
     parser.add_argument('--target_template', type=str, required=True, help='Path to the target template PDB file (required)')
     parser.add_argument('--target_hotspots', type=str, required=True, help='''Residue ranges for target hotspots, e.g., "14-30,80-81,90-102" (required)''')
     parser.add_argument('--binder_hotspots', type=str, default='', help='Residue ranges for binder, e.g. "14-30,80-81,90-102"') 
@@ -69,6 +69,9 @@ def main():
     chain_template = args.binder_chain #chain for binder
     vhh = args.vhh
 
+    if not vhh and not template_pdb:
+        raise SystemExit("Error: --binder_template is required unless --vhh is set.")
+
     pdb_target_path = args.target_template #template for target
     chain_id = args.target_chain #Select chain for target protein.
     
@@ -95,10 +98,7 @@ def main():
     mpnn_save = args.mpnn_save
 
     model_name = 'v_48_010'
-    try:
-        os.system(f'mkdir {folder_name}')
-    except:
-        pass
+    os.makedirs(folder_name, exist_ok=True)
         
     if vhh:
         load_np = np.load(f'framework/vhh.npy')
@@ -236,9 +236,9 @@ def main():
     cmap_loss = []
 
     # Create folders to save outputs
-    os.system(f'mkdir {folder_name}/traj/')
-    os.system(f'mkdir {folder_name}/mpnn/')
-    os.system(f'mkdir {folder_name}/designs/')
+    os.makedirs(f'{folder_name}/traj/', exist_ok=True)
+    os.makedirs(f'{folder_name}/mpnn/', exist_ok=True)
+    os.makedirs(f'{folder_name}/designs/', exist_ok=True)
 
     # Generate N number of trajectories
     if sample == False:

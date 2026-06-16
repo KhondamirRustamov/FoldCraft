@@ -51,7 +51,7 @@ python FoldCraft.py \
 Or run this code if you want to design nanobody fold-conditioned binders using VHH framework. In that case you don't need to specify the binder template pdb
 ```
 python FoldCraft.py \
-      --vhh 
+      --vhh \
       --output_folder design_vhh_pd_l1 \
       --target_template pd_l1.pdb \
       --target_hotspots '36-41,84-88,92-96' \

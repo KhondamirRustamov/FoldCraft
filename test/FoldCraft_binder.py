@@ -1,3 +1,16 @@
+# =============================================================================
+# EXPERIMENTAL — not part of the validated FoldCraft pipeline.
+#
+# FoldCraft_binder.py implements length-variable de novo binder design
+# (exploratory linear / miniprotein binder runs, e.g. Nipah, KEAP1). It is
+# provided as-is, is NOT covered by the paper's benchmarks, and its CLI /
+# behaviour may change or break. For the published results use FoldCraft.py
+# (fold-conditioned and VHH design).
+#
+# Note: imports `biopython_utils` from the repo root — run from the repository
+# root (e.g. `python test/FoldCraft_binder.py ...`) so it resolves.
+# =============================================================================
+
 import argparse
 import jax
 import jax.numpy as jnp
