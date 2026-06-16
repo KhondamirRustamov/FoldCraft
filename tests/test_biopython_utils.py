@@ -1,10 +1,8 @@
-"""Characterization tests for biopython_utils.py.
+"""Tests for the GPU-free helpers in biopython_utils.py.
 
-Goal: lock the CURRENT behavior of the GPU-free helpers before we refactor or
-tune the design pipeline. Several tests document behavior that is arguably a
-bug (notably the exclusive upper bound in ``set_range``); they are marked with
-a `BUG:` note. When we deliberately fix one, the corresponding test should be
-updated in the same commit so the change is explicit and reviewed.
+Covers hotspot/mask range parsing (``set_range``, inclusive of both endpoints),
+secondary-structure fraction arithmetic, sequence-composition notes, clash
+counting, interface detection, and CA-RMSD superposition.
 """
 import pytest
 
@@ -23,28 +21,25 @@ class TestSetRange:
     def test_comma_separated_singletons(self):
         assert bu.set_range("80,90,102") == [80, 90, 102]
 
-    def test_range_is_upper_bound_EXCLUSIVE(self):
-        # BUG (characterized, not endorsed): "39-45" expands to 39..44 and
-        # DROPS the endpoint 45, because the implementation uses
-        # range(start, end) with no +1. A user typing "39-45" almost certainly
-        # means residues 39 through 45 inclusive. This silently narrows every
-        # hotspot/mask window by one residue at the top.
-        assert bu.set_range("39-45") == [39, 40, 41, 42, 43, 44]
-        assert 45 not in bu.set_range("39-45")
+    def test_range_is_upper_bound_INCLUSIVE(self):
+        # Fixed: "39-45" now includes the endpoint 45 (was exclusive, which
+        # silently dropped the last residue of every hotspot/mask window).
+        assert bu.set_range("39-45") == [39, 40, 41, 42, 43, 44, 45]
+        assert 45 in bu.set_range("39-45")
 
     def test_mixed_ranges_and_singletons(self):
-        # Singletons keep their value; ranges drop their endpoint.
+        # Singletons keep their value; ranges include both endpoints.
         assert bu.set_range("14-30,80-81,90-102") == (
-            list(range(14, 30)) + [80] + list(range(90, 102))
+            list(range(14, 31)) + [80, 81] + list(range(90, 103))
         )
 
-    def test_single_width_range_yields_empty(self):
-        # BUG (characterized): "80-81" yields only [80]; "80-80" yields [].
-        assert bu.set_range("80-81") == [80]
-        assert bu.set_range("80-80") == []
+    def test_single_width_range(self):
+        # "80-81" -> both endpoints; "80-80" -> the single residue 80.
+        assert bu.set_range("80-81") == [80, 81]
+        assert bu.set_range("80-80") == [80]
 
     def test_order_preserved(self):
-        assert bu.set_range("90-92,10") == [90, 91, 10]
+        assert bu.set_range("90-92,10") == [90, 91, 92, 10]
 
 
 # ---------------------------------------------------------------------------
