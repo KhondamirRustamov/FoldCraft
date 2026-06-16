@@ -93,6 +93,25 @@ echo -e "Installing ColabDesign\n"
 pip3 install git+https://github.com/sokrypton/ColabDesign.git --no-deps || { echo -e "Error: Failed to install ColabDesign"; exit 1; }
 python -c "import colabdesign" >/dev/null 2>&1 || { echo -e "Error: colabdesign module not found after installation"; exit 1; }
 
+# install BindCraft (provides pr_relax / score_interface used by FoldCraft_binder.py)
+# BindCraft is not a pip package; clone it next to FoldCraft so that
+# `import BindCraft.functions` resolves. Set BINDCRAFT_COMMIT to pin a revision
+# for reproducibility (recommended); empty = default branch.
+echo -e "Installing BindCraft\n"
+BINDCRAFT_COMMIT="${BINDCRAFT_COMMIT:-}"
+bindcraft_dir="${install_dir}/BindCraft"
+if [ ! -d "${bindcraft_dir}" ]; then
+    git clone https://github.com/martinpacesa/BindCraft "${bindcraft_dir}" || { echo -e "Error: Failed to clone BindCraft"; exit 1; }
+fi
+if [ -n "${BINDCRAFT_COMMIT}" ]; then
+    git -C "${bindcraft_dir}" checkout "${BINDCRAFT_COMMIT}" || { echo -e "Error: Failed to checkout BindCraft commit ${BINDCRAFT_COMMIT}"; exit 1; }
+fi
+[ -f "${bindcraft_dir}/functions/__init__.py" ] || { echo -e "Error: BindCraft checkout is missing functions/__init__.py"; exit 1; }
+# DAlphaBall.gcc (interface holes scoring) ships with BindCraft; ensure executable.
+[ -f "${bindcraft_dir}/functions/DAlphaBall.gcc" ] || { echo -e "Error: BindCraft is missing functions/DAlphaBall.gcc"; exit 1; }
+chmod +x "${bindcraft_dir}/functions/DAlphaBall.gcc" || { echo -e "Warning: could not chmod +x DAlphaBall.gcc"; }
+python -c "import sys; sys.path.insert(0, '${install_dir}'); from bindcraft_deps import find_bindcraft_repo; print('BindCraft at', find_bindcraft_repo())" || { echo -e "Error: BindCraft not importable via bindcraft_deps"; exit 1; }
+
 # AlphaFold2 weights
 echo -e "Downloading AlphaFold2 model weights \n"
 params_dir="${install_dir}/params"
