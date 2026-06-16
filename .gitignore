@@ -20,3 +20,8 @@ fold_cond_cmap.png
 # OS / editor
 .DS_Store
 *.swp
+
+# Local venv / test caches
+.venv/
+.pytest_cache/
+.coverage
