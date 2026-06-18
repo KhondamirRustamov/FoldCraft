@@ -24,7 +24,7 @@ examples/
 | `1qys1.pdb` | Top7 | 1QYS |
 | `6d0t1.pdb` | β-barrel | 6D0T |
 | `3sd21.pdb` | Ig-like | 3SD2 (42–118) |
-| `5bvl1.pdb` | TIM barrel | 5BVL |
+| `5bvl_af2.pdb` | TIM barrel | 5BVL |
 | `3jx81.pdb` | α-solenoid | 3JX8 (172–269) |
 | `5aao1.pdb` | Ankyrin repeat | 5AAO (12–136) |
 
@@ -93,7 +93,7 @@ bash examples/scripts/run_all.sh
 | `design_1qys_pd_l1.sh` | Top7 | `1qys1.pdb` | `26-40,58-71` |
 | `design_6d0t_pd_l1.sh` | β-barrel | `6d0t1.pdb` | `12-15,25-31,40-43` |
 | `design_3sd2_pd_l1.sh` | Ig-like | `3sd21.pdb` | `17-24,39-46` |
-| `design_5bvl_pd_l1.sh` | TIM barrel | `5bvl1.pdb` | `42-65,68-87,89-113` |
+| `design_5bvl_pd_l1.sh` | TIM barrel | `5bvl_af2.pdb` | `42-65,68-87,89-113` |
 | `design_3jx8_pd_l1.sh` | α-solenoid | `3jx81.pdb` | `7-13,26-33,46-53,64-71,83-88` |
 | `design_5aao_pd_l1.sh` | Ankyrin | `5aao1.pdb` | `15-26,48-58,81-91,116-124` |
 

@@ -7,7 +7,7 @@ cd "$(dirname "$0")/../.." || exit 1
 
 python FoldCraft.py \
     --output_folder examples/outputs/design_5bvl_pd_l1 \
-    --binder_template examples/templates/5bvl1.pdb \
+    --binder_template examples/templates/5bvl_af2.pdb \
     --target_template examples/targets/pd-l1-1.pdb \
     --target_hotspots '29-35,49-55,68-77' \
     --binder_hotspots '42-65,68-87,89-113' \

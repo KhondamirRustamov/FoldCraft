@@ -135,7 +135,21 @@ def main():
                              chain = chain_template,
                              rm_template_seq=False,
                              rm_template_sc=False,)
-        
+
+        # Validate that the extracted sequence covers every modelled position.
+        # A mismatch means the binder template has gaps in its residue numbering
+        # (non-contiguous resSeq), which otherwise fails deep inside the model
+        # with an opaque broadcasting error.
+        if len(query_chain) != af_binder._len:
+            raise SystemExit(
+                f"Error: binder template '{template_pdb}' (chain '{chain_template}') "
+                f"yields {len(query_chain)} residues but the model spans "
+                f"{af_binder._len} positions. This usually means the PDB has gaps in "
+                "its residue numbering (missing resSeq entries). Renumber the binder "
+                "template contiguously starting from 1 (and update --binder_hotspots "
+                "accordingly) before running."
+            )
+
         #name='9had'
         af_binder.set_seq(query_chain[:af_binder._len])
         af_binder.predict(num_recycles=3, verbose=False)
