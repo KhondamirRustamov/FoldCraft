@@ -14,7 +14,11 @@ def set_range(hotspots_input):
     h_range = []
     for i in new_h:
         if '-' in i:
-            h_range += [x for x in range(int(i.split('-')[0]), int(i.split('-')[1]))]
+            # inclusive of both endpoints: "39-45" -> 39..45 (was exclusive of
+            # the upper bound, which silently dropped the last residue of every
+            # hotspot/mask window).
+            lo, hi = i.split('-')
+            h_range += [x for x in range(int(lo), int(hi) + 1)]
         else:
             h_range.append(int(i))
     return h_range
