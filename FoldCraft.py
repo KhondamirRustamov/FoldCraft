@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 from colabdesign.mpnn import mk_mpnn_model
 from biopython_utils import *
+from cmap_utils import assemble_fold_conditioned_cmap, binarize_cmap
 import warnings
 
 
@@ -99,36 +100,31 @@ def main():
 
     model_name = 'v_48_010'
     os.makedirs(folder_name, exist_ok=True)
-        
+
     if vhh:
+        # VHH path: binder cmap comes from the fixed VHH framework, the binder
+        # length is the 127-residue VHH scaffold, and the CDR (binder) hotspots
+        # are fixed -- any user-supplied binder_hotspots/binder_mask is ignored,
+        # matching the original behavior.
         load_np = np.load(f'framework/vhh.npy')
-        target_hotspots_np = np.array(set_range(target_hotspots))
         af_model = mk_afdesign_model(protocol="fixbb", use_templates=True)
         af_model.prep_inputs(pdb_filename=pdb_target_path,
                              ignore_missing=False,
                              chain = chain_id,)
-        
+
         target_len = af_model._len
         binder_len = 127
-        fc_cmap = np.zeros((target_len+binder_len, target_len+binder_len))
-        
         binder_hotspots = '26-35,55-59,102-116'
-        cdr_range = np.array(set_range(binder_hotspots))+target_len
-        
-        fc_cmap[-binder_len:,-binder_len:] = load_np
-        
-        for i in target_hotspots_np:
-            for x in cdr_range:
-                fc_cmap[x-1,i-1] = 1.
-                fc_cmap[i-1,x-1] = 1.
+        fc_cmap = assemble_fold_conditioned_cmap(load_np, target_len, binder_len,
+                                                 target_hotspots, binder_hotspots)
     else:
         pdbparser = PDBParser()
-        
+
         structure = pdbparser.get_structure(binder_template, template_pdb)
         chains = {chain.id:seq1(''.join(residue.resname for residue in chain)) for chain in structure.get_chains()}
-        
+
         query_chain = chains[chain_template]
-        
+
         af_binder = mk_afdesign_model(protocol="fixbb", use_templates=True)
         af_binder.prep_inputs(pdb_filename=template_pdb,
                              ignore_missing=False,
@@ -155,44 +151,26 @@ def main():
         af_binder.predict(num_recycles=3, verbose=False)
         print(f"CMAP of {binder_template} (monomer plddt: {af_binder.aux['log']['plddt']:.3f})")
         #plt.imshow(af_model.aux['cmap'])
-        
-        
+
+
         warnings.filterwarnings("ignore")
-        
+
         #Prepare target protein structure
-        
-        target_hotspots_np = np.array(set_range(target_hotspots))
-        
+
         af_model = mk_afdesign_model(protocol="fixbb", use_templates=True)
         af_model.prep_inputs(pdb_filename=pdb_target_path,
                              ignore_missing=False,
                              chain = chain_id,)
-        
+
         target_len = af_model._len
         binder_len = af_binder._len
-        
+
+        # binder cmap from the AlphaFold2 prediction of the binder monomer
         load_np = af_binder.aux['cmap']
-        
-        if binder_mask != '':
-            binder_mask = set_range(binder_mask)
-            for i in binder_mask:
-                load_np[i,:] = 0.
-                load_np[:,i] = 0.
-        
-        fc_cmap = np.zeros((target_len+binder_len, target_len+binder_len))
-        
-        if binder_hotspots == '':
-            cdr_range = np.array([range(0,binder_len)])+target_len
-        else:
-            cdr_range = np.array(set_range(binder_hotspots))+target_len
-        
-        fc_cmap[-binder_len:,-binder_len:] = load_np
-        
-        for i in target_hotspots_np:
-            for x in cdr_range:
-                fc_cmap[x-1,i-1] = 1.
-                fc_cmap[i-1,x-1] = 1.
-    
+        fc_cmap = assemble_fold_conditioned_cmap(load_np, target_len, binder_len,
+                                                 target_hotspots, binder_hotspots,
+                                                 binder_mask)
+
     from matplotlib import patches
     fig, ax = plt.subplots()
     plt.imshow(fc_cmap)
@@ -201,11 +179,10 @@ def main():
     ax.add_patch(rect)
     ax.add_patch(rect2)
     plt.savefig(f'{folder_name}/fold_cond_cmap.png')
-    
+
     np.save(f'{folder_name}/fold_cond_cmap.npy',fc_cmap)
-    
-    fc_cmap[fc_cmap>0] = 1
-    np.save(f'{folder_name}/fold_cond_cmap_mask.npy',fc_cmap)
+
+    np.save(f'{folder_name}/fold_cond_cmap_mask.npy', binarize_cmap(fc_cmap))
 
     # Start to design
 
