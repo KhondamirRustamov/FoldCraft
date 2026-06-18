@@ -1,0 +1,6 @@
+# Test dependencies for the CPU-only test suite (the GPU-free helper functions).
+# Lower-bound ranges so the suite resolves across supported Python versions.
+biopython>=1.83
+numpy>=1.26,<3
+scipy>=1.11
+pytest>=8
