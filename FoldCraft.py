@@ -184,6 +184,14 @@ def main():
 
     np.save(f'{folder_name}/fold_cond_cmap_mask.npy', binarize_cmap(fc_cmap))
 
+    # The fold-conditioned cmap and its mask are constant for the whole run, so
+    # keep them in memory instead of re-reading the .npy files from disk on every
+    # model build (previously np.load'd once per trajectory and once per MPNN
+    # sample). Each model is handed a fresh copy to preserve the previous
+    # per-iteration isolation; the loss callback only reads these arrays.
+    cond_cmap = fc_cmap
+    cond_cmap_mask = binarize_cmap(fc_cmap)
+
     # Start to design
 
     # Define the fold-conditioned loss
@@ -244,8 +252,8 @@ def main():
                                                  use_templates=True,)
 
             # load the fold-conditioned cmaps inside of af_model
-            af_model.opt['cond_cmap'] = np.load(f'{folder_name}/fold_cond_cmap.npy')
-            af_model.opt['cond_cmap_mask'] = np.load(f'{folder_name}/fold_cond_cmap_mask.npy')
+            af_model.opt['cond_cmap'] = cond_cmap.copy()
+            af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
             
             af_model.prep_inputs(pdb_filename=pdb_target_path,
                                          chain=chain_id, binder_len = binder_len,
@@ -291,8 +299,8 @@ def main():
             for num, seq in enumerate(samples['seq']):
                 af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
                                                        use_templates=True,)
-                af_model.opt['cond_cmap'] = np.load(f'{folder_name}/fold_cond_cmap.npy')
-                af_model.opt['cond_cmap_mask'] = np.load(f'{folder_name}/fold_cond_cmap_mask.npy')
+                af_model.opt['cond_cmap'] = cond_cmap.copy()
+                af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
                 af_model.prep_inputs(pdb_filename=pdb_target_path,
                                                chain=chain_id, binder_len = binder_len,
                                                hotspot=target_hotspots,
@@ -324,8 +332,8 @@ def main():
             af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
                                                  use_templates=True,)
             
-            af_model.opt['cond_cmap'] = np.load(f'{folder_name}/fold_cond_cmap.npy')
-            af_model.opt['cond_cmap_mask'] = np.load(f'{folder_name}/fold_cond_cmap_mask.npy')
+            af_model.opt['cond_cmap'] = cond_cmap.copy()
+            af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
             
             af_model.prep_inputs(pdb_filename=pdb_target_path,
                                          chain=chain_id, binder_len = binder_len,
@@ -367,8 +375,8 @@ def main():
                 for num, seq in enumerate(samples['seq']):
                     af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
                                                            use_templates=True,)
-                    af_model.opt['cond_cmap'] = np.load(f'{folder_name}/fold_cond_cmap.npy')
-                    af_model.opt['cond_cmap_mask'] = np.load(f'{folder_name}/fold_cond_cmap_mask.npy')
+                    af_model.opt['cond_cmap'] = cond_cmap.copy()
+                    af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
             
                     af_model.prep_inputs(pdb_filename=pdb_target_path,
                                                    chain=chain_id, binder_len = binder_len,
