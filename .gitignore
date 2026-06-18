@@ -25,3 +25,7 @@ fold_cond_cmap.png
 .venv/
 .pytest_cache/
 .coverage
+
+# BindCraft checkout for the experimental binder pipeline
+# (cloned by test/install_foldcraft_binder.sh)
+test/BindCraft/
