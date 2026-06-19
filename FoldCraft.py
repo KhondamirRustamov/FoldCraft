@@ -8,7 +8,7 @@ from colabdesign import mk_af_model
 import pandas as pd
 import matplotlib.pyplot as plt
 from Bio.PDB import PDBParser
-from Bio.SeqUtils import seq1
+from Bio.PDB.Polypeptide import is_aa
 import numpy as np
 import pickle
 from tqdm.notebook import tqdm
@@ -124,12 +124,17 @@ def main():
         fc_cmap = assemble_fold_conditioned_cmap(load_np, target_len, binder_len,
                                                  target_hotspots, binder_hotspots)
     else:
-        pdbparser = PDBParser()
-
-        structure = pdbparser.get_structure(binder_template, template_pdb)
-        chains = {chain.id:seq1(''.join(residue.resname for residue in chain)) for chain in structure.get_chains()}
-
-        query_chain = chains[chain_template]
+        # Count the binder template's *polymer* residues for the gap-numbering
+        # guard below. is_aa() excludes waters/ions/ligands but keeps modified
+        # residues (e.g. MSE) that colabdesign promotes -- so the count matches the
+        # model's view. The sequence itself is taken from the model after
+        # prep_inputs (query_chain, below), NOT from seq1() over raw resnames: the
+        # latter let HETATM/water inflate the length (waters -> 'X') or frame-shift
+        # it (2-char ion names like ZN/NA), which spuriously aborted valid
+        # crystallographic templates at the guard and, more rarely, silently
+        # corrupted the conditioned cmap.
+        structure = PDBParser(QUIET=True).get_structure(binder_template, template_pdb)
+        n_polymer = sum(1 for residue in structure[0][chain_template] if is_aa(residue))
 
         af_binder = mk_afdesign_model(protocol="fixbb", use_templates=True)
         af_binder.prep_inputs(pdb_filename=template_pdb,
@@ -138,22 +143,25 @@ def main():
                              rm_template_seq=False,
                              rm_template_sc=False,)
 
-        # Validate that the extracted sequence covers every modelled position.
-        # A mismatch means the binder template has gaps in its residue numbering
-        # (non-contiguous resSeq), which otherwise fails deep inside the model
-        # with an opaque broadcasting error.
-        if len(query_chain) != af_binder._len:
+        # A polymer-count vs model-span mismatch means the binder template has gaps
+        # in its residue numbering (non-contiguous resSeq), which otherwise fails
+        # deep inside the model with an opaque broadcasting error.
+        if n_polymer != af_binder._len:
             raise SystemExit(
                 f"Error: binder template '{template_pdb}' (chain '{chain_template}') "
-                f"yields {len(query_chain)} residues but the model spans "
+                f"has {n_polymer} polymer residues but the model spans "
                 f"{af_binder._len} positions. This usually means the PDB has gaps in "
                 "its residue numbering (missing resSeq entries). Renumber the binder "
                 "template contiguously starting from 1 (and update --binder_hotspots "
                 "accordingly) before running."
             )
 
-        #name='9had'
-        af_binder.set_seq(query_chain[:af_binder._len])
+        # Native binder sequence exactly as colabdesign sees it: aligned to _len,
+        # HETATM/water-free, and MODRES-correct (MSE -> M, not 'X').
+        query_chain = ''.join(
+            residue_constants.restypes[a] if a < residue_constants.restype_num else 'X'
+            for a in af_binder._wt_aatype)
+        af_binder.set_seq(query_chain)
         af_binder.predict(num_recycles=3, verbose=False)
         print(f"CMAP of {binder_template} (monomer plddt: {af_binder.aux['log']['plddt']:.3f})")
         #plt.imshow(af_model.aux['cmap'])
