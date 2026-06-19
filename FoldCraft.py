@@ -253,6 +253,18 @@ def main():
     os.makedirs(f'{folder_name}/mpnn/', exist_ok=True)
     os.makedirs(f'{folder_name}/designs/', exist_ok=True)
 
+    # Build ProteinMPNN once: model_name/backbone_noise/weights are constant for
+    # the whole run, but mk_mpnn_model joblib-loads the weights and rebuilds its
+    # jitted score/sample functions on every construction. Constructing it per
+    # trajectory (as before) repeated that work each iteration. Only prep_inputs
+    # (which writes self._inputs, not the model) varies per trajectory, so build
+    # here and re-prep inside the loop. The sampler RNG is seeded at construction
+    # with seed=None (non-deterministic), so a single shared key stream is
+    # statistically identical to a fresh model per trajectory -- no distribution
+    # change, just no reload.
+    mpnn_model = mk_mpnn_model(model_name, backbone_noise=mpnn_backbone_noise,
+                               weights=mpnn_version)
+
     # Generate N number of trajectories
     if sample == False:
         
@@ -297,8 +309,7 @@ def main():
             else:
                 raise ValueError("Wrong redesign_method was selected. Options: 'full','non-interface'")
         
-            mpnn_model = mk_mpnn_model(model_name, backbone_noise=mpnn_backbone_noise,weights=mpnn_version)
-            mpnn_model.prep_inputs(pdb_filename=f"{folder_name}/traj/{name}.pdb", chain='A,B', 
+            mpnn_model.prep_inputs(pdb_filename=f"{folder_name}/traj/{name}.pdb", chain='A,B',
                                    fix_pos=sol_design_pos, rm_aa = "C", inverse=True)
         
             samples = mpnn_model.sample_parallel(temperature=mpnn_sampling_temp, batch=mpnn_samples)
@@ -375,8 +386,7 @@ def main():
                 else:
                     raise ValueError("Wrong redesign_method was selected. Options: 'full','non-interface'")
             
-                mpnn_model = mk_mpnn_model(model_name, backbone_noise=mpnn_backbone_noise,weights=mpnn_version)
-                mpnn_model.prep_inputs(pdb_filename=f"{folder_name}/traj/{name}.pdb", chain='A,B', 
+                mpnn_model.prep_inputs(pdb_filename=f"{folder_name}/traj/{name}.pdb", chain='A,B',
                                        fix_pos=sol_design_pos, rm_aa = "C", inverse=True)
             
                 samples = mpnn_model.sample_parallel(temperature=mpnn_sampling_temp, batch=mpnn_samples)
