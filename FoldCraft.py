@@ -106,7 +106,13 @@ def main():
         # length is the 127-residue VHH scaffold, and the CDR (binder) hotspots
         # are fixed -- any user-supplied binder_hotspots/binder_mask is ignored,
         # matching the original behavior.
-        load_np = np.load(f'framework/vhh.npy')
+        # Anchor the bundled VHH framework cmap to the script's directory so
+        # --vhh runs work from any CWD (SLURM job dirs, installed invocations);
+        # the previous CWD-relative 'framework/vhh.npy' raised FileNotFoundError
+        # whenever the process was not launched from the repo root.
+        vhh_framework = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                     'framework', 'vhh.npy')
+        load_np = np.load(vhh_framework)
         af_model = mk_afdesign_model(protocol="fixbb", use_templates=True)
         af_model.prep_inputs(pdb_filename=pdb_target_path,
                              ignore_missing=False,
