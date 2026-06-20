@@ -339,17 +339,21 @@ def main():
                     pickle.dump(samples, handle, protocol=pickle.HIGHEST_PROTOCOL)   
                 
             #Predict Samples with AF2_ptm
-            print('Predicting sequences with AF2_ptm...')    
+            print('Predicting sequences with AF2_ptm...')
+            # Build the AF2-ptm prediction model once per trajectory and reuse it
+            # across the mpnn_samples sequences (only set_seq changes). Previously a
+            # fresh model + prep_inputs was constructed for every sample, re-running
+            # template featurization and forcing a fresh XLA compile each time.
+            af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
+                                                   use_templates=True,)
+            af_model.opt['cond_cmap'] = cond_cmap.copy()
+            af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
+            af_model.prep_inputs(pdb_filename=pdb_target_path,
+                                           chain=chain_id, binder_len = binder_len,
+                                           hotspot=target_hotspots,
+                                           rm_aa=rm_aa, #fix_pos=fixed_positions,
+                                           )
             for num, seq in enumerate(samples['seq']):
-                af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
-                                                       use_templates=True,)
-                af_model.opt['cond_cmap'] = cond_cmap.copy()
-                af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
-                af_model.prep_inputs(pdb_filename=pdb_target_path,
-                                               chain=chain_id, binder_len = binder_len,
-                                               hotspot=target_hotspots,
-                                               rm_aa=rm_aa, #fix_pos=fixed_positions,
-                                               )
                 af_model.set_seq(seq[-binder_len:])
                 af_model.predict(num_recycles=3, verbose=False, models=["model_1_ptm","model_2_ptm"])
                 print(f"predict: {name}_{num} plddt: {af_model.aux['log']['plddt']:.3f}, i_pae: {(af_model.aux['log']['i_pae']):.3f}, i_ptm: {af_model.aux['log']['i_ptm']:.3f}, cmap_loss: {af_model.aux['log']['cmap_loss_binder']:.3f}")
@@ -422,20 +426,21 @@ def main():
                     
                 #Predict Samples with AF2_ptm
                 print('Predicting sequences with AF2_ptm...')
+                # Build the AF2-ptm prediction model once per trajectory and reuse it
+                # across the batch (only set_seq changes), as in the non-sample path.
+                af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
+                                                       use_templates=True,)
+                af_model.opt['cond_cmap'] = cond_cmap.copy()
+                af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
+                af_model.prep_inputs(pdb_filename=pdb_target_path,
+                                               chain=chain_id, binder_len = binder_len,
+                                               hotspot=target_hotspots,
+                                               rm_aa=rm_aa, #fix_pos=fixed_positions,
+                                               )
                 # Cap the batch at the remaining global budget so it can't push
                 # `passed` past success_target (see iter_until_target); lambda reads
                 # the live `passed`, which is incremented on each accepted design.
                 for num, seq in iter_until_target(samples['seq'], lambda: passed, success_target):
-                    af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
-                                                           use_templates=True,)
-                    af_model.opt['cond_cmap'] = cond_cmap.copy()
-                    af_model.opt['cond_cmap_mask'] = cond_cmap_mask.copy()
-            
-                    af_model.prep_inputs(pdb_filename=pdb_target_path,
-                                                   chain=chain_id, binder_len = binder_len,
-                                                   hotspot=target_hotspots,
-                                                   rm_aa=rm_aa, #fix_pos=fixed_positions,
-                                                   )
                     af_model.set_seq(seq[-binder_len:])
                     af_model.predict(num_recycles=3, verbose=False, models=["model_1_ptm","model_2_ptm"])
                     print(f"predict: {name}_{num} plddt: {af_model.aux['log']['plddt']:.3f}, i_pae: {(af_model.aux['log']['i_pae']):.3f}, i_ptm: {af_model.aux['log']['i_ptm']:.3f}, cmap_loss: {af_model.aux['log']['cmap_loss_binder']:.3f}")
