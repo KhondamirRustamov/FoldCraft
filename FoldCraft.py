@@ -248,6 +248,25 @@ def main():
     iptms = []
     cmap_loss = []
 
+    # Persist results incrementally so an OOM/RunTimeError/preemption mid-run keeps
+    # every design recorded so far, instead of losing the whole table (it was
+    # previously written only once, after both loops). Progress streams to
+    # results.csv.partial after each accepted design; results.csv itself is created
+    # only by the finalizing call at the very end (atomic os.replace via
+    # write_atomic). This keeps "results.csv exists == chunk complete" true, which
+    # baseline/scheduler.py relies on for resume/merge -- a preempted chunk leaves
+    # results.csv.partial (recoverable) but no results.csv, so the scheduler
+    # re-runs it instead of skipping/merging it as done.
+    results_csv = f"{folder_name}/results.csv"
+    def write_results(finalize=False):
+        df = pd.DataFrame({'name':names,
+                           'sequence':sequences,
+                           'plddt':plddts,
+                           'ipae':ipaes,
+                           'iptm':iptms,
+                           'cmap_loss':cmap_loss})
+        write_atomic(results_csv, df.to_csv, finalize=finalize)
+
     # Create folders to save outputs
     os.makedirs(f'{folder_name}/traj/', exist_ok=True)
     os.makedirs(f'{folder_name}/mpnn/', exist_ok=True)
@@ -343,7 +362,8 @@ def main():
                 ipaes.append(af_model.aux['log']['i_pae'])
                 iptms.append(af_model.aux['log']['i_ptm'])
                 cmap_loss.append(af_model.aux['log']['cmap_loss_binder'])
-    
+                write_results()   # checkpoint after each design
+
     else:
         passed = 0
         #success_target = success_target
@@ -430,15 +450,11 @@ def main():
                         iptms.append(af_model.aux['log']['i_ptm'])
                         cmap_loss.append(af_model.aux['log']['cmap_loss_binder'])
                         passed+=1
+                        write_results()   # checkpoint after each design
     
-    df = pd.DataFrame({'name':names,
-                               'sequence':sequences,
-                               'plddt':plddts,
-                               'ipae':ipaes,
-                               'iptm':iptms,
-                               'cmap_loss':cmap_loss})
-    
-    df.to_csv(f"{folder_name}/results.csv")
+    # Final flush + atomic promote: results.csv now exists, signalling the chunk
+    # completed (also writes an empty table if no designs passed, as before).
+    write_results(finalize=True)
 
 if __name__ == '__main__':
     main()

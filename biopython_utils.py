@@ -53,6 +53,31 @@ def iter_until_target(items, current_count, target):
         yield index, item
         index += 1
 
+
+def write_atomic(final_path, write_fn, finalize=False):
+    """Write output via a temporary ``.partial`` file, promoting it to
+    ``final_path`` only on ``finalize`` (an atomic ``os.replace``) -- so
+    ``final_path`` exists only once it is fully written.
+
+    ``write_fn(path)`` performs the actual write (e.g. ``df.to_csv``). Every call
+    (re)writes ``final_path + '.partial'``; with ``finalize=True`` that partial is
+    atomically renamed onto ``final_path``. A crash before the finalizing call
+    leaves only the ``.partial`` (every row written so far, for recovery) and
+    never a half-written ``final_path``.
+
+    This matters when a consumer treats the file's *existence* as "complete":
+    baseline/scheduler.py keys chunk resume/merge on ``results.csv`` existing, so
+    streaming progress straight into ``results.csv`` would make a preempted chunk
+    look finished. Streaming into ``results.csv.partial`` and promoting once, at
+    the end, keeps "``results.csv`` exists == chunk done" true. Returns the
+    partial path.
+    """
+    partial = final_path + ".partial"
+    write_fn(partial)
+    if finalize:
+        os.replace(partial, final_path)
+    return partial
+
 # analyze sequence composition of design
 def validate_design_sequence(sequence, num_clashes, advanced_settings):
     note_array = []

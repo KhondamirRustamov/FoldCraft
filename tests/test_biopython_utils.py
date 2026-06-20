@@ -4,6 +4,8 @@ Covers hotspot/mask range parsing (``set_range``, inclusive of both endpoints),
 secondary-structure fraction arithmetic, sequence-composition notes, clash
 counting, interface detection, and CA-RMSD superposition.
 """
+import os
+
 import pytest
 
 import biopython_utils as bu
@@ -174,3 +176,33 @@ class TestIterUntilTarget:
         for _i, item in bu.iter_until_target(gen(), lambda: len(accepted), 2):
             accepted.append(item)
         assert touched == ["a", "b"]       # c/d/e never pulled from the source
+
+
+# ---------------------------------------------------------------------------
+# write_atomic -- stream to <path>.partial, promote to <path> only on finalize.
+# Regression guard for the scheduler interaction: writing results.csv
+# incrementally made a preempted chunk's partial table look like a finished
+# chunk (results.csv existing == done), so it was skipped on resume and merged
+# as complete. The final file must appear only when the run actually finished.
+# ---------------------------------------------------------------------------
+class TestWriteAtomic:
+    def test_partial_until_finalized(self, tmp_path):
+        final = str(tmp_path / "results.csv")
+        bu.write_atomic(final, lambda p: open(p, "w").write("a,b\n1,2\n"))
+        assert not os.path.exists(final)              # incomplete -> no results.csv
+        assert os.path.exists(final + ".partial")     # progress preserved
+        bu.write_atomic(final, lambda p: open(p, "w").write("a,b\n1,2\n3,4\n"),
+                        finalize=True)
+        assert os.path.exists(final)                  # atomically promoted
+        assert not os.path.exists(final + ".partial") # partial consumed by rename
+        assert open(final).read().count("\n") == 3    # final holds the full table
+
+    def test_crash_before_finalize_leaves_no_final(self, tmp_path):
+        # Simulated preemption: several incremental writes, never finalized. The
+        # scheduler must NOT see results.csv (else it skips/merges as done).
+        final = str(tmp_path / "results.csv")
+        for n in range(3):
+            bu.write_atomic(final, lambda p, n=n: open(p, "w").write("row\n" * (n + 1)))
+        assert not os.path.exists(final)
+        assert os.path.exists(final + ".partial")
+        assert open(final + ".partial").read() == "row\nrow\nrow\n"  # latest checkpoint
