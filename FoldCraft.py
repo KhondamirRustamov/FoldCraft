@@ -290,6 +290,11 @@ def main():
         for i in range(num_designs):
             i+=1
             clear_mem() # clearing memory at each step helps to avoid RunTimeError
+            # clear_mem() deletes every live JAX device buffer, including the hoisted
+            # mpnn_model's RNG key (its params are host-side numpy and survive), which
+            # would break sample_parallel below. Re-seed it: set_seed(None) gives a
+            # fresh key per trajectory, matching the original per-trajectory build.
+            mpnn_model.set_seed(None)
             name = f'traj_{i}'
             rm_aa = 'C'
             
@@ -380,6 +385,8 @@ def main():
         # accepted-design count exactly --target_success.
         while passed < success_target:
             clear_mem()
+            mpnn_model.set_seed(None)  # clear_mem() deletes the hoisted mpnn_model's
+                                       # RNG key; re-seed it (see the --num_designs branch)
             i+=1
             name = f'traj_{i}' #@param {type:"string"}
             rm_aa = 'C' #@param {type:"string"}
