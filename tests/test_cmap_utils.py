@@ -34,7 +34,10 @@ def _reference_cmap(load_np, target_len, binder_len, target_hotspots,
     fc_cmap = np.zeros((target_len + binder_len, target_len + binder_len))
 
     if binder_hotspots == '':
-        cdr_range = np.array([range(0, binder_len)]) + target_len
+        # empty == all binder residues, 1-based (1..binder_len); must match an
+        # explicit "1-<binder_len>". (Previously 0-based here too, which made the
+        # differential test tautological -- it agreed with the same bug.)
+        cdr_range = np.array([range(1, binder_len + 1)]) + target_len
     else:
         cdr_range = np.array(set_range(binder_hotspots)) + target_len
 
@@ -99,6 +102,26 @@ class TestStructure:
         bc = np.zeros((4, 4))
         out = cu.assemble_fold_conditioned_cmap(bc, 5, 4, "2-4", "1-3", "")
         np.testing.assert_array_equal(out, out.T)
+
+    def test_empty_binder_hotspots_equals_all_residues_explicit(self):
+        # Documented meaning of empty binder_hotspots = "all binder residues",
+        # so it must equal passing the full 1..binder_len range explicitly. The
+        # old 0-based default did NOT (it shifted the interface block up a row);
+        # this pins the corrected 1-based behavior independently of the reference.
+        bc = _fake_binder_cmap(4)
+        default = cu.assemble_fold_conditioned_cmap(bc, 5, 4, "2-4", "", "")
+        explicit = cu.assemble_fold_conditioned_cmap(bc, 5, 4, "2-4", "1-4", "")
+        np.testing.assert_array_equal(default, explicit)
+
+    def test_empty_default_conditions_every_binder_residue_not_last_target(self):
+        # Adversarial small case: target_len=5, binder_len=4, target hotspot "3"
+        # (col index 2). Correct binder rows are 5,6,7,8; the bug wrote 4,5,6,7 --
+        # a spurious contact on target row 4 and none on binder row 8.
+        bc = np.zeros((4, 4))
+        out = cu.assemble_fold_conditioned_cmap(bc, 5, 4, "3", "", "")
+        for r in (5, 6, 7, 8):                      # every binder residue conditioned
+            assert out[r, 2] == 1.0 and out[2, r] == 1.0
+        assert out[4, 2] == 0.0 and out[2, 4] == 0.0  # no spurious last-target contact
 
     def test_known_contact_entries(self):
         # set_range is inclusive: target_hotspots="2-3" -> [2, 3];

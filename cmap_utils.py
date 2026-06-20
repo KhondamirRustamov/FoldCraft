@@ -9,9 +9,10 @@ duplicated the same logic inline).
 Index conventions: hotspot/mask range strings are parsed by ``set_range`` into
 1-based residue numbers (inclusive of both endpoints), which map to 0-based
 array positions as ``residue R -> index R-1``. When no binder hotspots are
-given the default ``np.array([range(0, binder_len)])`` -- a 2-D
-``(1, binder_len)`` array -- drives NumPy fancy-indexing in the contact loop,
-selecting every binder position.
+given the default ``np.array([range(1, binder_len + 1)])`` -- a 2-D
+``(1, binder_len)`` array of 1-based residue numbers -- drives NumPy
+fancy-indexing in the contact loop, selecting every binder position (identical
+to passing ``--binder_hotspots 1-<binder_len>``).
 
 These semantics decide which residues the design loss conditions on, so changes
 here are accuracy-relevant and should be measured against the design baseline.
@@ -81,7 +82,13 @@ def assemble_fold_conditioned_cmap(binder_cmap, target_len, binder_len,
     fc_cmap = np.zeros((target_len + binder_len, target_len + binder_len))
 
     if binder_hotspots == '':
-        cdr_range = np.array([range(0, binder_len)]) + target_len
+        # "all binder residues" -- 1-based 1..binder_len, matching what
+        # set_range yields for an explicit "1-<binder_len>". The previous
+        # 0-based range(0, binder_len) shifted the whole interface block up one
+        # row: it wrote a spurious contact on the LAST target residue and dropped
+        # the binder's C-terminal residue from conditioning (only hit when
+        # --binder_hotspots is omitted; every shipped config passes it).
+        cdr_range = np.array([range(1, binder_len + 1)]) + target_len
     else:
         cdr_range = np.array(set_range(binder_hotspots)) + target_len
 
