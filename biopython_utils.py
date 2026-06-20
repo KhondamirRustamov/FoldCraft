@@ -23,6 +23,36 @@ def set_range(hotspots_input):
             h_range.append(int(i))
     return h_range
 
+
+def iter_until_target(items, current_count, target):
+    """Enumerate ``items`` as ``(index, item)`` but stop *before* yielding once
+    ``current_count()`` has reached ``target``.
+
+    Caps a batch loop against a GLOBAL running total so a single batch cannot
+    overshoot it. ``current_count`` is a zero-arg callable read at the top of
+    every iteration, so it reflects acceptances the caller makes *inside* the
+    loop body (e.g. ``current_count=lambda: passed`` where the body does
+    ``passed += 1`` for each accepted item). Items are yielded lazily, so any
+    per-item work past the target (here: an AF2 prediction per sample) is never
+    started.
+
+    Used by FoldCraft's ``--sample`` loop: ProteinMPNN emits a batch of
+    ``mpnn_samples`` sequences per trajectory and every sequence clearing the
+    success gate is saved; without this cap the final batch kept saving past
+    ``--target_success`` (overshooting by up to ``mpnn_samples - 1``). The outer
+    ``while passed < target`` only stops *starting* new trajectories, not the
+    in-flight batch -- this is what makes the success count exact.
+    """
+    it = iter(items)
+    index = 0
+    while current_count() < target:
+        try:
+            item = next(it)
+        except StopIteration:
+            return
+        yield index, item
+        index += 1
+
 # analyze sequence composition of design
 def validate_design_sequence(sequence, num_clashes, advanced_settings):
     note_array = []

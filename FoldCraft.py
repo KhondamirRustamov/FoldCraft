@@ -348,7 +348,13 @@ def main():
         passed = 0
         #success_target = success_target
         i=0
-        while passed <= success_target:
+        # Stop *starting* trajectories once the target is reached (`<`, not `<=`,
+        # which overshot by one). The inner MPNN-batch loop is *also* capped, via
+        # iter_until_target below -- otherwise the final batch kept saving every
+        # passing sample past the target (up to mpnn_samples-1 extra), since the
+        # outer guard only fires between trajectories. Together they make the
+        # accepted-design count exactly --target_success.
+        while passed < success_target:
             clear_mem()
             i+=1
             name = f'traj_{i}' #@param {type:"string"}
@@ -395,8 +401,11 @@ def main():
                         pickle.dump(samples, handle, protocol=pickle.HIGHEST_PROTOCOL)   
                     
                 #Predict Samples with AF2_ptm
-                print('Predicting sequences with AF2_ptm...')    
-                for num, seq in enumerate(samples['seq']):
+                print('Predicting sequences with AF2_ptm...')
+                # Cap the batch at the remaining global budget so it can't push
+                # `passed` past success_target (see iter_until_target); lambda reads
+                # the live `passed`, which is incremented on each accepted design.
+                for num, seq in iter_until_target(samples['seq'], lambda: passed, success_target):
                     af_model = mk_afdesign_model(protocol="binder", loss_callback=cmap_loss_binder,
                                                            use_templates=True,)
                     af_model.opt['cond_cmap'] = cond_cmap.copy()

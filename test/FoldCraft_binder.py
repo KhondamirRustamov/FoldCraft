@@ -165,7 +165,10 @@ def main():
         passed = 0
         #success_target = success_target
         i=start_with
-        while passed <= success_target:
+        # `< target` (not `<=`) and the iter_until_target cap on the inner batch
+        # loop below make the accepted count exactly --target_success (was `<=`
+        # plus an uncapped batch loop -> overshoot by up to mpnn_samples).
+        while passed < success_target:
             clear_mem()
             if binder_lengths != False:
             	binder_len = random.randint(binder_lengths[0], binder_lengths[1]+1)
@@ -222,8 +225,9 @@ def main():
                         pickle.dump(samples, handle, protocol=pickle.HIGHEST_PROTOCOL)   
                     
                 #Predict Samples with AF2_ptm
-                print('Predicting sequences with AF2_ptm...')    
-                for num, seq in enumerate(samples['seq']):
+                print('Predicting sequences with AF2_ptm...')
+                # cap the batch at the remaining global budget (see iter_until_target)
+                for num, seq in iter_until_target(samples['seq'], lambda: passed, success_target):
                     af_model = mk_afdesign_model(protocol="binder", loss_callback=rg_loss,
                                                            use_templates=True,)
            
