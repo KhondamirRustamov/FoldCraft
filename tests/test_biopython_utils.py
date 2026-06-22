@@ -4,6 +4,8 @@ Covers hotspot/mask range parsing (``set_range``, inclusive of both endpoints),
 secondary-structure fraction arithmetic, sequence-composition notes, clash
 counting, interface detection, and CA-RMSD superposition.
 """
+import os
+
 import pytest
 
 import biopython_utils as bu
@@ -128,3 +130,79 @@ class TestTargetPdbRmsd:
         # Aligning a structure's chain A against itself must give ~0 RMSD.
         rmsd = bu.target_pdb_rmsd(pdb_1qys, pdb_1qys, "A")
         assert rmsd == 0.0
+
+
+# ---------------------------------------------------------------------------
+# iter_until_target -- budget cap for the --sample design loop. Regression
+# guard for the overrun where the final MPNN batch kept saving every passing
+# sample past --target_success (the outer `while passed < target` only stops
+# *between* trajectories). The adversarial case is a batch of all-passing
+# samples with little remaining budget: the old uncapped `enumerate` accepted
+# the whole batch; iter_until_target must stop at exactly the target.
+# ---------------------------------------------------------------------------
+class TestIterUntilTarget:
+    def test_all_passing_batch_stops_at_exact_budget(self):
+        # The bug: a 5-sample batch, target 2 -> old code accepted all 5.
+        accepted = []
+        for _i, item in bu.iter_until_target("abcde", lambda: len(accepted), 2):
+            accepted.append(item)          # every sample "passes the gate"
+        assert accepted == ["a", "b"]      # exactly target, not the whole batch
+
+    def test_failures_do_not_consume_budget(self):
+        accepted, seen = [], []
+        for i, _item in bu.iter_until_target(range(10), lambda: len(accepted), 2):
+            seen.append(i)
+            if i in (1, 4):                # only these clear the success gate
+                accepted.append(i)
+        assert accepted == [1, 4]          # gate failures don't burn budget
+        assert seen == [0, 1, 2, 3, 4]     # stopped right after the 2nd acceptance
+
+    def test_yields_indices_like_enumerate(self):
+        assert list(bu.iter_until_target("xy", lambda: 0, 10)) == [(0, "x"), (1, "y")]
+
+    def test_already_at_target_yields_nothing(self):
+        # No remaining budget -> no per-item work (no AF2 prediction) is started.
+        assert list(bu.iter_until_target("abc", lambda: 5, 2)) == []
+
+    def test_lazy_stop_skips_remaining_work(self):
+        # Proves the cap stops *before* doing per-item work past the target,
+        # not just before recording it (the compute-saving property).
+        touched = []
+        accepted = []
+        def gen():
+            for ch in "abcde":
+                touched.append(ch)
+                yield ch
+        for _i, item in bu.iter_until_target(gen(), lambda: len(accepted), 2):
+            accepted.append(item)
+        assert touched == ["a", "b"]       # c/d/e never pulled from the source
+
+
+# ---------------------------------------------------------------------------
+# write_atomic -- stream to <path>.partial, promote to <path> only on finalize.
+# Regression guard for the scheduler interaction: writing results.csv
+# incrementally made a preempted chunk's partial table look like a finished
+# chunk (results.csv existing == done), so it was skipped on resume and merged
+# as complete. The final file must appear only when the run actually finished.
+# ---------------------------------------------------------------------------
+class TestWriteAtomic:
+    def test_partial_until_finalized(self, tmp_path):
+        final = str(tmp_path / "results.csv")
+        bu.write_atomic(final, lambda p: open(p, "w").write("a,b\n1,2\n"))
+        assert not os.path.exists(final)              # incomplete -> no results.csv
+        assert os.path.exists(final + ".partial")     # progress preserved
+        bu.write_atomic(final, lambda p: open(p, "w").write("a,b\n1,2\n3,4\n"),
+                        finalize=True)
+        assert os.path.exists(final)                  # atomically promoted
+        assert not os.path.exists(final + ".partial") # partial consumed by rename
+        assert open(final).read().count("\n") == 3    # final holds the full table
+
+    def test_crash_before_finalize_leaves_no_final(self, tmp_path):
+        # Simulated preemption: several incremental writes, never finalized. The
+        # scheduler must NOT see results.csv (else it skips/merges as done).
+        final = str(tmp_path / "results.csv")
+        for n in range(3):
+            bu.write_atomic(final, lambda p, n=n: open(p, "w").write("row\n" * (n + 1)))
+        assert not os.path.exists(final)
+        assert os.path.exists(final + ".partial")
+        assert open(final + ".partial").read() == "row\nrow\nrow\n"  # latest checkpoint
