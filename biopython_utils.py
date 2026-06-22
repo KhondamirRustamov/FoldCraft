@@ -1,10 +1,9 @@
 import os
 import math
 import numpy as np
-from collections import defaultdict
 from scipy.spatial import cKDTree
 from Bio import BiopythonWarning
-from Bio.PDB import PDBParser, DSSP, Selection, Polypeptide, PDBIO, Select, Chain, Superimposer
+from Bio.PDB import PDBParser, Selection, Superimposer
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.PDB.Selection import unfold_entities
 from Bio.PDB.Polypeptide import is_aa
@@ -236,66 +235,3 @@ def hotspot_residues(trajectory_pdb, binder_chain="B", atom_distance_cutoff=4.0)
                 interacting_residues[binder_residue.id[1]] = aa_single_letter
 
     return interacting_residues
-
-# calculate secondary structure percentage of design
-def calc_ss_percentage(pdb_file, advanced_settings, chain_id="B", atom_distance_cutoff=4.0):
-    # Parse the structure
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure('protein', pdb_file)
-    model = structure[0]  # Consider only the first model in the structure
-
-    # Calculate DSSP for the model
-    dssp = DSSP(model, pdb_file, dssp=advanced_settings["dssp_path"])
-
-    # Prepare to count residues
-    ss_counts = defaultdict(int)
-    ss_interface_counts = defaultdict(int)
-    plddts_interface = []
-    plddts_ss = []
-
-    # Get chain and interacting residues once
-    chain = model[chain_id]
-    interacting_residues = set(hotspot_residues(pdb_file, chain_id, atom_distance_cutoff).keys())
-
-    for residue in chain:
-        residue_id = residue.id[1]
-        if (chain_id, residue_id) in dssp:
-            ss = dssp[(chain_id, residue_id)][2]  # Get the secondary structure
-            ss_type = 'loop'
-            if ss in ['H', 'G', 'I']:
-                ss_type = 'helix'
-            elif ss == 'E':
-                ss_type = 'sheet'
-
-            ss_counts[ss_type] += 1
-
-            if ss_type != 'loop':
-                # calculate secondary structure normalised pLDDT
-                avg_plddt_ss = sum(atom.bfactor for atom in residue) / len(residue)
-                plddts_ss.append(avg_plddt_ss)
-
-            if residue_id in interacting_residues:
-                ss_interface_counts[ss_type] += 1
-
-                # calculate interface pLDDT
-                avg_plddt_residue = sum(atom.bfactor for atom in residue) / len(residue)
-                plddts_interface.append(avg_plddt_residue)
-
-    # Calculate percentages
-    total_residues = sum(ss_counts.values())
-    total_interface_residues = sum(ss_interface_counts.values())
-
-    percentages = calculate_percentages(total_residues, ss_counts['helix'], ss_counts['sheet'])
-    interface_percentages = calculate_percentages(total_interface_residues, ss_interface_counts['helix'], ss_interface_counts['sheet'])
-
-    i_plddt = round(sum(plddts_interface) / len(plddts_interface) / 100, 2) if plddts_interface else 0
-    ss_plddt = round(sum(plddts_ss) / len(plddts_ss) / 100, 2) if plddts_ss else 0
-
-    return (*percentages, *interface_percentages, i_plddt, ss_plddt)
-
-def calculate_percentages(total, helix, sheet):
-    helix_percentage = round((helix / total) * 100,2) if total > 0 else 0
-    sheet_percentage = round((sheet / total) * 100,2) if total > 0 else 0
-    loop_percentage = round(((total - helix - sheet) / total) * 100,2) if total > 0 else 0
-
-    return helix_percentage, sheet_percentage, loop_percentage

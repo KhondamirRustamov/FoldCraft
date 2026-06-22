@@ -12,7 +12,6 @@ silently change residue selection, interface detection, or scoring.
 Covered today (all CPU-only, run on a laptop in seconds):
 
 - `biopython_utils.set_range` — hotspot/mask range parsing
-- `biopython_utils.calculate_percentages` — secondary-structure fractions
 - `biopython_utils.validate_design_sequence` — composition notes
 - `biopython_utils.calculate_clash_score` — clash counting (real PDB fixtures)
 - `biopython_utils.hotspot_residues` — interface detection (synthetic complex)

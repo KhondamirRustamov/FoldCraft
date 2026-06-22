@@ -1,8 +1,8 @@
 """Tests for the GPU-free helpers in biopython_utils.py.
 
 Covers hotspot/mask range parsing (``set_range``, inclusive of both endpoints),
-secondary-structure fraction arithmetic, sequence-composition notes, clash
-counting, interface detection, and CA-RMSD superposition.
+sequence-composition notes, clash counting, interface detection, and CA-RMSD
+superposition.
 """
 import os
 
@@ -42,26 +42,6 @@ class TestSetRange:
 
     def test_order_preserved(self):
         assert bu.set_range("90-92,10") == [90, 91, 92, 10]
-
-
-# ---------------------------------------------------------------------------
-# calculate_percentages -- pure arithmetic for secondary-structure fractions
-# ---------------------------------------------------------------------------
-class TestCalculatePercentages:
-    def test_basic_split(self):
-        # total=10, helix=5, sheet=3 -> loop=2
-        assert bu.calculate_percentages(10, 5, 3) == (50.0, 30.0, 20.0)
-
-    def test_zero_total_is_safe(self):
-        assert bu.calculate_percentages(0, 0, 0) == (0, 0, 0)
-
-    def test_all_helix(self):
-        assert bu.calculate_percentages(4, 4, 0) == (100.0, 0.0, 0.0)
-
-    def test_rounding_to_two_decimals(self):
-        # 1/3 -> 33.33
-        h, s, l = bu.calculate_percentages(3, 1, 1)
-        assert h == 33.33 and s == 33.33 and l == 33.33
 
 
 # ---------------------------------------------------------------------------
